@@ -1,0 +1,12 @@
+CREATE DATABASE WEBCRAWLER;
+
+USE WEBCRAWLER;
+
+CREATE TABLE urls (
+  id INT NOT NULL AUTO_INCREMENT,
+  id_pai INT NOT NULL,
+  url VARCHAR(255) NOT NULL,
+  urlpai VARCHAR(255) NOT NULL,
+  depth INT,
+  primary key(id)
+);
