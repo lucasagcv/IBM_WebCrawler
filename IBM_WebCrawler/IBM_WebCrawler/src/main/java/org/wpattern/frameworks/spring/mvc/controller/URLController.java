@@ -46,7 +46,7 @@ public class URLController {
 		URLS = new ArrayList<URLBean>();
 				
 		URLFormBean URLForm = new URLFormBean();
-		getPageLinks(urlCrawler, 0, "", -1);	
+		getPageLinks(urlCrawler, 0, "", -1, true);	
 		emf.close();	
 		URLForm.setURLS(URLS);
 
@@ -69,38 +69,55 @@ public class URLController {
 		return URLS;
 	}
 	
-	public void getPageLinks(String URLCrawler, int depth, String URLPai, int id_URLpai) {
+	public void getPageLinks(String URLCrawler, int depth, String URLPai, int id_URLpai, boolean create) {
 		if ((!links.contains(URLCrawler) && (depth <= MAX_DEPTH)) && (!URLCrawler.isEmpty())) {
 			System.out.println( " >> URL: " + URLCrawler +
 								" >> Depth: " + depth +
 								" >> URLPai: " + URLPai +
 								" >> id_URLpai: " + id_URLpai );
 			try {
+				boolean foundSons = false;
+
 				// evitar requisições a mais
-				List<URLBean> URLSFILHO = new ArrayList<URLBean>();
-				URLSFILHO = checkForSons(URLCrawler);				
-				if((URLSFILHO.size()) > 0 && (depth + 1 == MAX_DEPTH)) {
-					for (int i = 0; i < URLSFILHO.size(); i++){
-						URLS.add(URLSFILHO.get(i));
-	                }					
+				if(depth < MAX_DEPTH){
+					List<URLBean> URLSFILHO = new ArrayList<URLBean>();
+					URLSFILHO = checkForSons(URLCrawler);				
+					if(URLSFILHO.size() > 0) {
+						foundSons = true;
+
+						URLBean newURL;		
+						newURL = new URLBean(URLCrawler, depth, URLPai, id_URLpai);						
+						URLS.add(newURL);
+
+						links.add(URLCrawler);
+						depth++;
+
+						for (int i = 0; i < URLSFILHO.size(); i++){
+							URLS.add(URLSFILHO.get(i));
+							getPageLinks(URLSFILHO.get(i).getURL(), depth, URLCrawler, URLSFILHO.get(i).getId_pai(),false);
+		                }					
+					}
 				}
-				else {
-					Document document;
-					Elements linksOnPage;	
-					document = Jsoup.connect(URLCrawler).get();
-					linksOnPage = document.select("a[href]");
-	
-					URLBean newURL;
-	
-					newURL = new URLBean(URLCrawler, depth, URLPai, id_URLpai);
+				if(!foundSons){						
+					if(create) {
+						URLBean newURL;	
+						newURL = new URLBean(URLCrawler, depth, URLPai, id_URLpai);					
+						URLS.add(newURL);
+						id_URLpai = addURL(newURL);
+					}
 					
-					URLS.add(newURL);
 					links.add(URLCrawler);
-					id_URLpai = addURL(newURL);
 					depth++;
-									
-					for (Element page : linksOnPage) {
-						getPageLinks(page.attr("abs:href"), depth, URLCrawler, id_URLpai);
+
+					if(depth-1 < MAX_DEPTH){
+						Document document;
+						Elements linksOnPage;	
+						document = Jsoup.connect(URLCrawler).get();
+						linksOnPage = document.select("a[href]");
+										
+						for (Element page : linksOnPage) {
+							getPageLinks(page.attr("abs:href"), depth, URLCrawler, id_URLpai, true);
+						}
 					}
 				}
 
