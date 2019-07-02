@@ -1,6 +1,5 @@
 # IBM_WebCrawler
 WebCrawler developed using Java Spring MVC.
-Developed by: Lucas Cavenaghi.
 
 ## Used on the project
 * Spring MVC as a framework;
